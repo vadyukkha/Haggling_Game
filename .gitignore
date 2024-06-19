@@ -1,0 +1,5 @@
+.vscode/
+
+Game/src/game
+
+TelegramBot/.env
