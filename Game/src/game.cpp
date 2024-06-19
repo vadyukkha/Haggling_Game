@@ -150,10 +150,10 @@ int main() {
     std::string user_folder_link = "../Users/" + TEAM_NAME + "/" + TEAM_NAME + ".dylib";
     std::string bot_hat_lover = "../Users/hat_lover/hat_lover.dylib";
     std::string bot_book_lover = "../Users/book_lover/book_lover.dylib";
-    std::string bot_ball_lover = "../Users/ball_lover/ball_lover.dylib"; // in beta
+    std::string bot_ball_lover = "../Users/ball_lover/ball_lover.dylib";
 
-    std::vector<std::string> bots = {bot_hat_lover, bot_book_lover};
-    std::vector<std::string> names = {"bot_hat_lover", "bot_book_lover"};
+    std::vector<std::string> bots = {bot_hat_lover, bot_book_lover, bot_ball_lover};
+    std::vector<std::string> names = {"bot_hat_lover", "bot_book_lover", "bot_ball_lover"};
 
     for (int count = 0; count < bots.size(); count++) {
         result_file << "---------- " << names[count] << " ----------" << std::endl;

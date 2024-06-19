@@ -3,3 +3,5 @@
 Game/src/game
 
 TelegramBot/.env
+
+.DS_Store
