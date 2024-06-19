@@ -29,6 +29,7 @@ async def run_game(game_path: str, folder_name: str, message: types.Message):
         terminal_process.stdin.write(start_game_command.encode() + b'\n')
         await terminal_process.stdin.drain()
 
+        await asyncio.sleep(5) 
         document = FSInputFile(f'../Game/bd/result_{folder_name}.txt')
         await bot.send_document(message.chat.id, document)
 
