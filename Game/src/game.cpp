@@ -6,6 +6,7 @@
 #include <ctime>
 #include <string>
 #include <fstream>
+#include "teamname.h"
 
 typedef int(*DecideFunc)(int, int, int, int, int, int, int);
 
@@ -129,19 +130,18 @@ void play_game196(void* handleA, void* handleB, std::ofstream& result_file) {
 
 int main() {
     srand(time(0));
-    std::string name_team = "yandexlavka666";
-    std::string output = "../bd/result_" + name_team + ".txt";
-    std::ofstream result_file(output.c_str());
+    std::string output = "../bd/result_" + TEAM_NAME + ".txt";
+    std::ofstream result_file(output);
 
     if (!result_file.is_open()) {
         std::cerr << "Failed to open result file.\n";
         return 1;
     }
 
-    std::string user_folder_link = "../Haggling_Game/Users/" + name_team + ".dylib";
-    std::string bot_hat_lover = "../Haggling_Game/Users/hat_lover.dylib";
-    std::string bot_book_lover = "../Haggling_Game/Users/book_lover.dylib";
-    std::string bot_ball_lover = "../Haggling_Game/Users/ball_lover.dylib"; // in beta
+    std::string user_folder_link = "../Users/" + TEAM_NAME + "/" + TEAM_NAME + ".dylib";
+    std::string bot_hat_lover = "../Users/hat_lover/hat_lover.dylib";
+    std::string bot_book_lover = "../Users/book_lover/book_lover.dylib";
+    std::string bot_ball_lover = "../Users/ball_lover/ball_lover.dylib"; // in beta
 
     void* handleA = dlopen(user_folder_link.c_str(), RTLD_LAZY);
     void* handleB = dlopen(bot_book_lover.c_str(), RTLD_LAZY);

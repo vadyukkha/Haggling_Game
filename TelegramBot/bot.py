@@ -31,7 +31,7 @@ async def process_folder_name(message: types.Message, state: FSMContext):
     folder_name = message.text
     await state.update_data(folder_name=folder_name)
     
-    folder_path = os.path.join("../Users", folder_name)
+    folder_path = os.path.join("../Game/Users", folder_name)
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
         
@@ -43,7 +43,7 @@ async def process_folder_name(message: types.Message, state: FSMContext):
 async def process_cpp_file(message: types.Message, state: FSMContext):
     data = await state.get_data()
     folder_name = data['folder_name']
-    folder_path = os.path.join("../Users", folder_name)
+    folder_path = os.path.join("../Game/Users", folder_name)
 
     cpp_file = message.document
     file_name = cpp_file.file_name
@@ -69,6 +69,11 @@ async def process_cpp_file(message: types.Message, state: FSMContext):
             "-std=c++20"
         ]
         subprocess.run(compile_command, check=True)
+        
+        game_cpp_path = os.path.join("../Game/src", "teamname.h")
+        with open(game_cpp_path, 'w') as game_file:
+            game_file.write(f'std::string TEAM_NAME = "{folder_name};"\n')
+
     except subprocess.CalledProcessError as e:
         await message.reply(f'Ошибка компиляции файла "{file_name}": {e}')
     
