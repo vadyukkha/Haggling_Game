@@ -7,6 +7,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Router
 from aiogram.filters import Command
+from aiogram.types.input_file import FSInputFile
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,6 +17,24 @@ bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 router = Router()
+
+async def run_game(game_path: str, folder_name: str, message: types.Message):
+    try:
+        terminal_process = await asyncio.create_subprocess_shell("/bin/bash", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cd_command = f"cd {game_path}"
+        terminal_process.stdin.write(cd_command.encode() + b'\n')
+        await terminal_process.stdin.drain()
+
+        start_game_command = "./game"
+        terminal_process.stdin.write(start_game_command.encode() + b'\n')
+        await terminal_process.stdin.drain()
+
+        document = FSInputFile(f'../Game/bd/result_{folder_name}.txt')
+        await bot.send_document(message.chat.id, document)
+
+    except Exception as e:
+        print(f"Ошибка при запуске терминала или выполнении команды: {e}")
+        
 
 class Form(StatesGroup):
     folder_name = State()
@@ -36,6 +55,10 @@ async def process_folder_name(message: types.Message, state: FSMContext):
         os.makedirs(folder_path)
         
     await message.reply(f'Команда "{folder_name}" добавлена. Теперь отправьте мне cpp файл')
+
+    game_cpp_path = os.path.join("../Game/src", "teamname.txt")
+    with open(game_cpp_path, 'w') as game_file:
+        game_file.write(f"{folder_name}")
 
     await state.set_state(Form.cpp_file)
 
@@ -70,9 +93,18 @@ async def process_cpp_file(message: types.Message, state: FSMContext):
         ]
         subprocess.run(compile_command, check=True)
         
-        game_cpp_path = os.path.join("../Game/src", "teamname.h")
-        with open(game_cpp_path, 'w') as game_file:
-            game_file.write(f'std::string TEAM_NAME = "{folder_name};"\n')
+        game_path = os.path.join("../Game/src", "game.cpp")
+        game_executable_path = os.path.join("../Game/src", "game")
+        compile_game_command = [
+            "g++",
+            "-o", game_executable_path,
+            game_path,
+            "-ldl",
+            "-std=c++20"
+        ]
+        subprocess.run(compile_game_command, check=True)
+
+        await run_game("../Game/src", folder_name, message)
 
     except subprocess.CalledProcessError as e:
         await message.reply(f'Ошибка компиляции файла "{file_name}": {e}')

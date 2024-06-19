@@ -6,11 +6,11 @@
 #include <ctime>
 #include <string>
 #include <fstream>
-#include "teamname.h"
 
 typedef int(*DecideFunc)(int, int, int, int, int, int, int);
 
 void output_picked_offer(const std::vector<int>& v, std::ofstream& result_file) {
+    result_file << "Item costs: ";
     for (const auto it : v) {
         result_file << it << " ";
     }
@@ -130,6 +130,15 @@ void play_game196(void* handleA, void* handleB, std::ofstream& result_file) {
 
 int main() {
     srand(time(0));
+    std::ifstream t_name("teamname.txt");
+    if (!t_name.is_open()) {
+        std::cerr << "Failed to open teamname.\n";
+        return 1;
+    }
+    
+    std::string TEAM_NAME;
+    t_name >> TEAM_NAME;
+
     std::string output = "../bd/result_" + TEAM_NAME + ".txt";
     std::ofstream result_file(output);
 
@@ -143,59 +152,75 @@ int main() {
     std::string bot_book_lover = "../Users/book_lover/book_lover.dylib";
     std::string bot_ball_lover = "../Users/ball_lover/ball_lover.dylib"; // in beta
 
-    void* handleA = dlopen(user_folder_link.c_str(), RTLD_LAZY);
-    void* handleB = dlopen(bot_book_lover.c_str(), RTLD_LAZY);
+    std::vector<std::string> bots = {bot_hat_lover, bot_book_lover};
+    std::vector<std::string> names = {"bot_hat_lover", "bot_book_lover"};
 
-    if (!handleA || !handleB) {
-        result_file << "Failed to load shared libraries.\n";
-        return 1;
+    for (int count = 0; count < bots.size(); count++) {
+        result_file << "---------- " << names[count] << " ----------" << std::endl;
+        void* handleA = dlopen(user_folder_link.c_str(), RTLD_LAZY);
+        void* handleB = dlopen(bots[count].c_str(), RTLD_LAZY);
+
+        if (!handleA || !handleB) {
+            result_file << "Failed to load shared libraries.\n";
+            return 1;
+        }
+
+        for (int c = 0; c < 196; c++) {
+            play_game196(handleA, handleB, result_file);
+        }
+
+        int games_played_overall = games_played;
+        int player_wins_overall = player_wins;
+        int opponent_wins_overall = opponent_wins;
+        int draws_overall = draws;
+        int player_points_overall = player_points;
+        int opponent_points_overall = opponent_points;
+
+        player_points = 0;
+        opponent_points = 0;
+        games_played = 0;
+        player_wins = 0;
+        opponent_wins = 0;
+        draws = 0;
+
+        i = 0;
+        j = 0;
+
+        for (int c = 0; c < 196; c++) {
+            play_game196(handleB, handleA, result_file);
+        }
+
+        games_played_overall += games_played;
+        player_wins_overall += opponent_wins;
+        opponent_wins_overall += player_wins;
+        draws_overall += draws;
+        player_points_overall += opponent_points;
+        opponent_points_overall += player_points;
+
+        dlclose(handleA);
+        dlclose(handleB);
+
+        player_points = 0;
+        opponent_points = 0;
+        games_played = 0;
+        player_wins = 0;
+        opponent_wins = 0;
+        draws = 0;
+
+        i = 0;
+        j = 0;
+
+        // Вывод общих результатов
+        result_file << "Overall Results:" << std::endl;
+        result_file << "Games Played: " << games_played_overall << std::endl;
+        result_file << "Player A Wins: " << player_wins_overall << std::endl;
+        result_file << "Player B Wins: " << opponent_wins_overall << std::endl;
+        result_file << "Draws: " << draws_overall << std::endl;
+        result_file << "Total Player A Points: " << player_points_overall << std::endl;
+        result_file << "Total Player B Points: " << opponent_points_overall << std::endl;
+        result_file << "Player A percent of points: " << (double)player_points_overall / (double)(10 * games_played_overall)  * 100 << std::endl;
+        result_file << "Player B percent of points: " << (double)opponent_points_overall / (double)(10 * games_played_overall) * 100 << std::endl << std::endl;
     }
-
-    for (int c = 0; c < 196; c++) {
-        play_game196(handleA, handleB, result_file);
-    }
-
-    int games_played_overall = games_played;
-    int player_wins_overall = player_wins;
-    int opponent_wins_overall = opponent_wins;
-    int draws_overall = draws;
-    int player_points_overall = player_points;
-    int opponent_points_overall = opponent_points;
-
-    player_points = 0;
-    opponent_points = 0;
-    games_played = 0;
-    player_wins = 0;
-    opponent_wins = 0;
-    draws = 0;
-
-    i = 0;
-    j = 0;
-
-    for (int c = 0; c < 196; c++) {
-        play_game196(handleB, handleA, result_file);
-    }
-
-    games_played_overall += games_played;
-    player_wins_overall += opponent_wins;
-    opponent_wins_overall += player_wins;
-    draws_overall += draws;
-    player_points_overall += opponent_points;
-    opponent_points_overall += player_points;
-
-    dlclose(handleA);
-    dlclose(handleB);
-
-    // Вывод общих результатов
-    result_file << "Overall Results:" << std::endl;
-    result_file << "Games Played: " << games_played_overall << std::endl;
-    result_file << "Player A Wins: " << player_wins_overall << std::endl;
-    result_file << "Player B Wins: " << opponent_wins_overall << std::endl;
-    result_file << "Draws: " << draws_overall << std::endl;
-    result_file << "Total Player A Points: " << player_points_overall << std::endl;
-    result_file << "Total Player B Points: " << opponent_points_overall << std::endl;
-    result_file << "Player A percent of points: " << (double)player_points_overall / (double)(10 * games_played_overall)  * 100 << std::endl;
-    result_file << "Player B percent of points: " << (double)opponent_points_overall / (double)(10 * games_played_overall) * 100 << std::endl;
 
     result_file.close();
 
