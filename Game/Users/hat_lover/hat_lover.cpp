@@ -16,9 +16,9 @@ struct Offer {
 
 Offer create_offer_hat(int cost_hat, int cost_book, int cost_ball)  {
     Offer offer;
-    offer.hat = 1;
-    offer.book = 0;
-    offer.ball = 0;
+    offer.hat = 0;
+    offer.book = 2;
+    offer.ball = 3;
     return offer;
 }
 
