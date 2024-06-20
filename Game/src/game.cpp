@@ -37,7 +37,7 @@ int draws = 0;
 int i = 0;
 int j = 0;
 
-void play_game196(void* handleA, void* handleB, std::ofstream& result_file) {
+void play_game196(void* handleA, void* handleB, std::ofstream& result_file, const std::string& user1, const std::string& user2) {
     // загружаем функции
     DecideFunc decideA = (DecideFunc)dlsym(handleA, "decide");
     DecideFunc decideB = (DecideFunc)dlsym(handleB, "decide");
@@ -65,7 +65,7 @@ void play_game196(void* handleA, void* handleB, std::ofstream& result_file) {
             // Ход игрока A
             int decision = decideA(turn, hatCostA, bookCostA, ballCostA, hatCount, bookCount, ballCount);
             if (decision == 200) {
-                result_file << "Player A accepted the offer.\n";
+                result_file << "Player " << user1 << " accepted the offer.\n";
                 
                 // Оценка очков игрока A за этот раунд
                 int my_value = evaluate_offer({hatCount, bookCount, ballCount}, hatCostA, bookCostA, ballCostA);
@@ -78,13 +78,13 @@ void play_game196(void* handleA, void* handleB, std::ofstream& result_file) {
                 hatCount = decision / 100;
                 bookCount = (decision / 10) % 10;
                 ballCount = decision % 10;
-                result_file << "Player A proposes: " << hatCount << " hats, " << bookCount << " books, " << ballCount << " balls.\n";
+                result_file << "Player " << user1 << " proposes: " << hatCount << " hats, " << bookCount << " books, " << ballCount << " balls.\n";
             }
         } else {
             // Ход игрока B
             int decision = decideB(turn, hatCostB, bookCostB, ballCostB, hatCount, bookCount, ballCount);
             if (decision == 200) {
-                result_file << "Player B accepted the offer.\n";
+                result_file << "Player " << user2 << " accepted the offer.\n";
 
                 // Оценка очков игрока B за этот раунд
                 int my_value = evaluate_offer({hatCount, bookCount, ballCount}, hatCostB, bookCostB, ballCostB);
@@ -97,20 +97,20 @@ void play_game196(void* handleA, void* handleB, std::ofstream& result_file) {
                 hatCount = decision / 100;
                 bookCount = (decision / 10) % 10;
                 ballCount = decision % 10;
-                result_file << "Player B proposes: " << hatCount << " hats, " << bookCount << " books, " << ballCount << " balls.\n";
+                result_file << "Player " << user2 << " proposes: " << hatCount << " hats, " << bookCount << " books, " << ballCount << " balls.\n";
             }
         }
     }
 
     // Вывод результатов после каждой игры
     result_file << "\nGame " << games_played << " Results:" << std::endl;
-    result_file << "Player A Points: " << playerA_points << std::endl;
-    result_file << "Player B Points: " << playerB_points << std::endl;
+    result_file << "Player " << user1 << " Points: " << playerA_points << std::endl;
+    result_file << "Player " << user2 << " Points: " << playerB_points << std::endl;
     if (playerA_points > playerB_points) {
-        result_file << "Player A wins this game." << std::endl << std::endl;
+        result_file << "Player " << user1 << " wins this game." << std::endl << std::endl;
         player_wins += 1;
     } else if (playerA_points < playerB_points) {
-        result_file << "Player B wins this game." << std::endl << std::endl;
+        result_file << "Player " << user2 << " wins this game." << std::endl << std::endl;
         opponent_wins += 1;
     } else {
         result_file << "It's a draw." << std::endl << std::endl;
@@ -166,7 +166,7 @@ int main() {
         }
 
         for (int c = 0; c < 196; c++) {
-            play_game196(handleA, handleB, result_file);
+            play_game196(handleA, handleB, result_file, TEAM_NAME, names[count]);
         }
 
         int games_played_overall = games_played;
@@ -175,6 +175,8 @@ int main() {
         int draws_overall = draws;
         int player_points_overall = player_points;
         int opponent_points_overall = opponent_points;
+
+        result_file << "---------- swap of sides ----------" << std::endl;
 
         player_points = 0;
         opponent_points = 0;
@@ -187,7 +189,7 @@ int main() {
         j = 0;
 
         for (int c = 0; c < 196; c++) {
-            play_game196(handleB, handleA, result_file);
+            play_game196(handleB, handleA, result_file, names[count], TEAM_NAME);
         }
 
         games_played_overall += games_played;
@@ -213,13 +215,13 @@ int main() {
         // Вывод общих результатов
         result_file << "Overall Results:" << std::endl;
         result_file << "Games Played: " << games_played_overall << std::endl;
-        result_file << "Player A Wins: " << player_wins_overall << std::endl;
-        result_file << "Player B Wins: " << opponent_wins_overall << std::endl;
+        result_file << "Player " << TEAM_NAME << " Wins: " << player_wins_overall << std::endl;
+        result_file << "Player " << names[count] << " Wins: " << opponent_wins_overall << std::endl;
         result_file << "Draws: " << draws_overall << std::endl;
-        result_file << "Total Player A Points: " << player_points_overall << std::endl;
-        result_file << "Total Player B Points: " << opponent_points_overall << std::endl;
-        result_file << "Player A percent of points: " << (double)player_points_overall / (double)(10 * games_played_overall)  * 100 << std::endl;
-        result_file << "Player B percent of points: " << (double)opponent_points_overall / (double)(10 * games_played_overall) * 100 << std::endl << std::endl;
+        result_file << "Total Player " << TEAM_NAME << " Points: " << player_points_overall << std::endl;
+        result_file << "Total Player " << names[count] << " Points: " << opponent_points_overall << std::endl;
+        result_file << "Player " << TEAM_NAME << " percent of points: " << (double)player_points_overall / (double)(10 * games_played_overall)  * 100 << std::endl;
+        result_file << "Player " << names[count] << " percent of points: " << (double)opponent_points_overall / (double)(10 * games_played_overall) * 100 << std::endl << std::endl;
     }
 
     result_file.close();

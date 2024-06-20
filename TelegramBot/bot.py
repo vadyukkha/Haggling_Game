@@ -1,6 +1,7 @@
 import os
 import asyncio
 import subprocess
+import shutil
 from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -30,8 +31,22 @@ async def run_game(game_path: str, folder_name: str, message: types.Message):
         await terminal_process.stdin.drain()
 
         await asyncio.sleep(5) 
-        document = FSInputFile(f'../Game/bd/result_{folder_name}.txt')
-        await bot.send_document(message.chat.id, document)
+
+        bd_file_path = f'../Game/bd/result_{folder_name}.txt'
+        user_folder_path = f'../Game/Users/{folder_name}'
+
+        if os.path.exists(bd_file_path):
+            document = FSInputFile(bd_file_path)
+            await bot.send_document(message.chat.id, document)
+            await message.reply("Для запуска игры снова, используй старт и повторяй действия\n")
+            os.remove(bd_file_path)
+            os.remove("../Game/src/teamname.txt")
+        else:
+            await message.reply("Файл результатов не найден")
+
+        if os.path.exists(user_folder_path):
+            shutil.rmtree(user_folder_path)
+
 
     except Exception as e:
         print(f"Ошибка при запуске терминала или выполнении команды: {e}")
@@ -44,7 +59,18 @@ class Form(StatesGroup):
 @router.message(Command(commands=["start"]))
 async def cmd_start(message: types.Message, state: FSMContext):
     await state.set_state(Form.folder_name)
-    await message.reply("Привет! Введите название команды")
+    await message.reply(f"Привет! Перед началом рекомендую ознакомиться с некоторыми тонкостями работы программы.\n"
+                        "Используй функцию в файле следующим образом:\n\n"
+                        "#ifdef _WIN32 \n"
+                        "#define EXPORT __declspec(dllexport) \n"
+                        "#else \n"
+                        '#define EXPORT __attribute__((visibility("default"))) \n'
+                        "#endif \n"
+                        "\n"
+                        'extern "C" EXPORT int decide(int turn, int cost_hat, int cost_book, int cost_ball, int count_hat, int count_book, int count_ball)\n\n'
+                        "Затем отправляй мне название своего файл\n"
+                        "Название файла должно обязательно совпадать с тем, что вы введете.")
+
 
 @router.message(Form.folder_name)
 async def process_folder_name(message: types.Message, state: FSMContext):
@@ -55,7 +81,7 @@ async def process_folder_name(message: types.Message, state: FSMContext):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
         
-    await message.reply(f'Команда "{folder_name}" добавлена. Теперь отправьте мне cpp файл')
+    await message.reply(f'Теперь отправьте мне cpp файл')
 
     game_cpp_path = os.path.join("../Game/src", "teamname.txt")
     with open(game_cpp_path, 'w') as game_file:
@@ -79,7 +105,7 @@ async def process_cpp_file(message: types.Message, state: FSMContext):
     file_path = os.path.join(folder_path, file_name)
     await bot.download(cpp_file, file_path)
 
-    await message.reply(f'Файл "{file_name}" сохранен')
+    await message.reply(f'Файл "{file_name}" сохранен. Скоро скину вам результаты вашей стратегии против ботов')
 
     try:
         # Компиляция файла в библиотеку .dylib
